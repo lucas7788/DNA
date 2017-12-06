@@ -7,7 +7,6 @@ import (
 	"DNA/core/contract/program"
 	sig "DNA/core/signature"
 	tx "DNA/core/transaction"
-	"DNA/core/transaction/payload"
 	"DNA/crypto"
 	. "DNA/errors"
 	"DNA/vm"
