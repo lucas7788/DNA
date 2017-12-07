@@ -209,6 +209,11 @@ func (this *TXNPool) cleanTransactionList(txns []*transaction.Transaction) error
 		}
 		if this.deltxnList(txn) {
 			cleaned++
+		}else{
+			log.Infof("txn=%x not cleaned",txn.Hash())
+			for _, v := range this.txnList {
+				log.Infof("v.Hash()=%x",v.Hash())
+			}
 		}
 	}
 	if txnsNum != cleaned {
