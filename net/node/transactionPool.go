@@ -230,6 +230,7 @@ func (this *TXNPool) addtxnList(txn *transaction.Transaction) bool {
 	if _, ok := this.txnList[txnHash]; ok {
 		return false
 	}
+	log.Infof("[addtxnList] addtxnList txn hash=%x",txnHash)
 	this.txnList[txnHash] = txn
 	return true
 }
