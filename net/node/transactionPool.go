@@ -203,16 +203,20 @@ func (this *TXNPool) cleanTransactionList(txns []*transaction.Transaction) error
 	cleaned := 0
 	txnsNum := len(txns)
 	for _, txn := range txns {
+		if exist := ledger.DefaultLedger.Store.IsTxHashDuplicate(txn.Hash()); exist == false {
+			log.Warnf("[cleanTransactionList] transaction %x not in db before clean.", txn.Hash())
+		}
+
 		if txn.TxType == transaction.BookKeeping {
 			txnsNum = txnsNum - 1
 			continue
 		}
 		if this.deltxnList(txn) {
 			cleaned++
-		}else{
-			log.Infof("txn=%x not cleaned",txn.Hash())
+		} else {
+			log.Infof("txn=%x not cleaned", txn.Hash())
 			for _, v := range this.txnList {
-				log.Infof("v.Hash()=%x",v.Hash())
+				log.Infof("v.Hash()=%x", v.Hash())
 			}
 		}
 	}
@@ -230,7 +234,7 @@ func (this *TXNPool) addtxnList(txn *transaction.Transaction) bool {
 	if _, ok := this.txnList[txnHash]; ok {
 		return false
 	}
-	log.Infof("[addtxnList] addtxnList txn hash=%x",txnHash)
+	log.Infof("[addtxnList] addtxnList txn hash=%x", txnHash)
 	this.txnList[txnHash] = txn
 	return true
 }
