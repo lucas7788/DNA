@@ -35,11 +35,11 @@ func (this *TXNPool) init() {
 func (this *TXNPool) AppendTxnPool(txn *transaction.Transaction) ErrCode {
 	//verify transaction with Concurrency
 	if errCode := va.VerifyTransaction(txn); errCode != ErrNoError {
-		log.Infof("Transaction tx=%x verification failed", txn.Hash())
+		log.Info("Transaction verification failed", txn.Hash())
 		return errCode
 	}
 	if errCode := va.VerifyTransactionWithLedger(txn, ledger.DefaultLedger); errCode != ErrNoError {
-		log.Infof("Transaction tx=%x verification with ledger failed", txn.Hash())
+		log.Info("Transaction verification with ledger failed", txn.Hash())
 		return errCode
 	}
 	//verify transaction by pool with lock
@@ -203,23 +203,12 @@ func (this *TXNPool) cleanTransactionList(txns []*transaction.Transaction) error
 	cleaned := 0
 	txnsNum := len(txns)
 	for _, txn := range txns {
-		if exist := ledger.DefaultLedger.Store.IsTxHashDuplicate(txn.Hash()); exist == false {
-			log.Warnf("[cleanTransactionList] transaction %x not in db before clean.", txn.Hash())
-		}
-
 		if txn.TxType == transaction.BookKeeping {
 			txnsNum = txnsNum - 1
 			continue
 		}
 		if this.deltxnList(txn) {
 			cleaned++
-		} else {
-			log.Infof("txn=%x not cleaned", txn.Hash())
-			this.Lock()
-			for _, v := range this.txnList {
-				log.Infof("v.Hash()=%x", v.Hash())
-			}
-			this.Unlock()
 		}
 	}
 	if txnsNum != cleaned {
@@ -236,7 +225,6 @@ func (this *TXNPool) addtxnList(txn *transaction.Transaction) bool {
 	if _, ok := this.txnList[txnHash]; ok {
 		return false
 	}
-	log.Infof("[addtxnList] addtxnList txn hash=%x", txnHash)
 	this.txnList[txnHash] = txn
 	return true
 }
