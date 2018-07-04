@@ -311,10 +311,8 @@ func (bd *ChainStore) IsTxHashDuplicate(txhash Uint256) bool {
 	prefix := []byte{byte(DATA_Transaction)}
 	_, err_get := bd.st.Get(append(prefix, txhash.ToArray()...))
 	if err_get != nil {
-		log.Infof("[IsTxHashDuplicate] NRF tx=%x",txhash)
 		return false
 	} else {
-		log.Infof("[IsTxHashDuplicate] FND tx=%x",txhash)
 		return true
 	}
 }
@@ -569,7 +567,7 @@ func (bd *ChainStore) SaveTransaction(tx *tx.Transaction, height uint32) error {
 	// get transaction hash
 	txHashValue := tx.Hash()
 	txHashValue.Serialize(txhash)
-	log.Info(fmt.Sprintf("[SaveTransaction] transaction header + hash: %x", txhash))
+	log.Debug(fmt.Sprintf("transaction header + hash: %x\n", txhash))
 
 	// generate value
 	w := bytes.NewBuffer(nil)
@@ -1163,8 +1161,6 @@ func (self *ChainStore) handlePersistBlockTask(b *Block, ledger *Ledger) {
 		if err != nil {
 			log.Error("failed to persist header hash list:", err)
 			return
-		}else{
-			log.Infof("[handlePersistBlockTask] block %d persist completed.",b.Blockdata.Height)
 		}
 		self.mu.Lock()
 		self.storedHeaderCount = storedHeaderCount
