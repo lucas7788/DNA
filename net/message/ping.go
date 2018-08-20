@@ -51,7 +51,7 @@ func (msg ping) Verify(buf []byte) error {
 
 func (msg ping) Handle(node Noder) error {
 	node.SetHeight(msg.height)
-	log.Infof("[Get Ping] node %x, height=%d",node.GetPubKey(),msg.height)
+	log.Infof("[Get Ping] node %x, height=%d",*node.GetPubKey(),msg.height)
 	buf, err := NewPongMsg()
 	if err != nil {
 		log.Error("failed build a new ping message")

@@ -50,7 +50,7 @@ func (msg pong) Verify(buf []byte) error {
 }
 
 func (msg pong) Handle(node Noder) error {
-	log.Infof("[Get Pong] node %x, height=%d",node.GetPubKey(),msg.height)
+	log.Infof("[Get Pong] node %x, height=%d",*node.GetPubKey(),msg.height)
 	node.SetHeight(msg.height)
 	return nil
 }
