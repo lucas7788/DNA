@@ -1056,7 +1056,7 @@ func (bd *ChainStore) persist(b *Block) error {
 	if err != nil {
 		return err
 	}
-	hash:=b.Hash()
+	hash=b.Hash()
 	log.Infof("block persist completed=%x",hash.ToString())
 	return nil
 }
