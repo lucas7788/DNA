@@ -1128,7 +1128,7 @@ func (self *ChainStore) SaveBlock(b *Block, ledger *Ledger) error {
 
 func (self *ChainStore) handlePersistBlockTask(b *Block, ledger *Ledger) {
 	hash:=b.Hash()
-	log.Info("handlePersistBlockTask %x",hash.ToString())
+	log.Infof("handlePersistBlockTask %x",hash.ToString())
 	if b.Blockdata.Height <= self.currentBlockHeight {
 		return
 	}
