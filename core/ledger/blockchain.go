@@ -41,6 +41,7 @@ func NewBlockchainWithGenesisBlock(defaultBookKeeper []*crypto.PubKey) (*Blockch
 }
 
 func (bc *Blockchain) AddBlock(block *Block) error {
+	log.Infof("[AddBlock] hash=%x",block.hash.ToString())
 	log.Debug()
 	bc.mutex.Lock()
 	defer bc.mutex.Unlock()

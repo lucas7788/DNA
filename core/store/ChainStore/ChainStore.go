@@ -625,7 +625,7 @@ func (bd *ChainStore) GetBlock(hash Uint256) (*Block, error) {
 			return nil, err
 		}
 	}
-
+	log.Info("GetBlock complete")
 	return b, nil
 }
 
@@ -675,6 +675,7 @@ func (self *ChainStore) GetBookKeeperList() ([]*crypto.PubKey, []*crypto.PubKey,
 }
 
 func (bd *ChainStore) persist(b *Block) error {
+	log.Infof("block persist hash=%x",b.Hash().ToString())
 	utxoUnspents := make(map[Uint160]map[Uint256][]*tx.UTXOUnspent)
 	unspents := make(map[Uint256][]uint16)
 	quantities := make(map[Uint256]Fixed64)
@@ -1054,7 +1055,7 @@ func (bd *ChainStore) persist(b *Block) error {
 	if err != nil {
 		return err
 	}
-
+	log.Infof("block persist completed=%x",b.Hash().ToString())
 	return nil
 }
 
@@ -1124,6 +1125,7 @@ func (self *ChainStore) SaveBlock(b *Block, ledger *Ledger) error {
 }
 
 func (self *ChainStore) handlePersistBlockTask(b *Block, ledger *Ledger) {
+	log.Info("handlePersistBlockTask %x",b.Hash().ToString())
 	if b.Blockdata.Height <= self.currentBlockHeight {
 		return
 	}
