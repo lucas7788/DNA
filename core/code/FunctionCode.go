@@ -51,6 +51,26 @@ func (fc *FunctionCode) Deserialize(r io.Reader) error {
 	return nil
 }
 
+func (fc *FunctionCode) Serialization(sink *ZeroCopySink) error {
+	sink.WriteVarBytes(ContractParameterTypeToByte(fc.ParameterTypes))
+	sink.WriteVarBytes(fc.Code)
+	return nil
+}
+
+func (fc *FunctionCode) Deserialization(source *ZeroCopySource) error {
+	var eof, irregular bool
+	paramType, _, irregular, eof := source.NextVarBytes()
+	fc.ParameterTypes = ByteToContractParameterType(paramType)
+	fc.Code, _, irregular, eof = source.NextVarBytes()
+	if irregular {
+		return ErrIrregularData
+	}
+	if eof {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+
 // method of ICode
 // Get code
 func (fc *FunctionCode) GetCode() []byte {

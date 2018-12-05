@@ -13,7 +13,7 @@ import (
 	"github.com/itchyny/base58-go"
 )
 
-const UINT160SIZE int = 20
+const UINT160SIZE = 20
 
 type Uint160 [UINT160SIZE]uint8
 

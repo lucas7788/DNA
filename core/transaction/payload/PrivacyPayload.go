@@ -1,6 +1,7 @@
 package payload
 
 import (
+	. "DNA/common"
 	"DNA/common/serialization"
 	"DNA/crypto"
 	"crypto/ecdsa"
@@ -23,6 +24,8 @@ type PayloadEncryptType byte
 type PayloadEncryptAttr interface {
 	Serialize(w io.Writer) error
 	Deserialize(r io.Reader) error
+	Serialization(sink *ZeroCopySink) error
+	Deserialization(source *ZeroCopySource) error
 	Encrypt(msg []byte, keys interface{}) ([]byte, error)
 	Decrypt(msg []byte, keys interface{}) ([]byte, error)
 }
@@ -58,6 +61,14 @@ func (pp *PrivacyPayload) Serialize(w io.Writer, version byte) error {
 	return err
 }
 
+func (pp *PrivacyPayload) Serialization(sink *ZeroCopySink, version byte) error {
+	sink.WriteBytes([]byte{byte(pp.PayloadType)})
+	sink.WriteVarBytes(pp.Payload)
+	sink.WriteBytes([]byte{byte(pp.EncryptType)})
+	pp.EncryptAttr.Serialization(sink)
+	return nil
+}
+
 func (pp *PrivacyPayload) Deserialize(r io.Reader, version byte) error {
 	var PayloadType [1]byte
 	_, err := io.ReadFull(r, PayloadType[:])
@@ -90,6 +101,11 @@ func (pp *PrivacyPayload) Deserialize(r io.Reader, version byte) error {
 	return err
 }
 
+func (pp *PrivacyPayload) Deserialization(source *ZeroCopySource, version byte) error {
+	//TODO
+	return nil
+}
+
 type EcdhAes256 struct {
 	FromPubkey *crypto.PubKey
 	ToPubkey   *crypto.PubKey
@@ -107,6 +123,15 @@ func (ea *EcdhAes256) Serialize(w io.Writer) error {
 	}
 	err = serialization.WriteVarBytes(w, ea.Nonce)
 	return err
+}
+func (ea *EcdhAes256) Serialization(sink *ZeroCopySink) error {
+	err := ea.FromPubkey.Serialization(sink)
+	err = ea.ToPubkey.Serialization(sink)
+	if err != nil {
+		return err
+	}
+	sink.WriteVarBytes(ea.Nonce)
+	return nil
 }
 func (ea *EcdhAes256) Deserialize(r io.Reader) error {
 	ea.FromPubkey = new(crypto.PubKey)
@@ -126,6 +151,23 @@ func (ea *EcdhAes256) Deserialize(r io.Reader) error {
 		return err
 	}
 	ea.Nonce = nonce
+	return nil
+}
+
+func (ea *EcdhAes256) Deserialization(source *ZeroCopySource) error {
+	err := ea.FromPubkey.DeSerialization(source)
+	ea.ToPubkey.DeSerialization(source)
+	if err != nil {
+		return err
+	}
+	data, _, irregular, eof := source.NextVarBytes()
+	if irregular {
+		return ErrIrregularData
+	}
+	if eof {
+		return io.ErrUnexpectedEOF
+	}
+	ea.Nonce = data
 	return nil
 }
 

@@ -38,6 +38,28 @@ func (ui *UTXOTxInput) Deserialize(r io.Reader) error {
 	return nil
 }
 
+func (ui *UTXOTxInput) Deserialization(source *common.ZeroCopySource) error {
+	val,eof := source.NextBytes(common.UINT256SIZE)
+	if eof {
+		return io.ErrUnexpectedEOF
+	}
+	copy(ui.ReferTxID[:], val)
+	if eof {
+		return io.ErrUnexpectedEOF
+	}
+	ui.ReferTxOutputIndex, eof = source.NextUint16()
+	if eof {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+
+func (ui *UTXOTxInput) Serialization(sink *common.ZeroCopySink) error {
+    sink.WriteBytes(ui.ReferTxID.ToArray())
+	sink.WriteUint16(ui.ReferTxOutputIndex)
+	return nil
+}
+
 func (ui *UTXOTxInput) ToString() string {
 	return fmt.Sprintf("%x%x", ui.ReferTxID.ToString(), ui.ReferTxOutputIndex)
 }

@@ -1,6 +1,7 @@
 package payload
 
 import (
+	. "DNA/common"
 	"DNA/common/serialization"
 	. "DNA/errors"
 	"errors"
@@ -43,5 +44,25 @@ func (a *Record) Deserialize(r io.Reader, version byte) error {
 	if err != nil {
 		return NewDetailErr(errors.New("[RecordDetail], RecordData deserialize failed."), ErrNoCode, "")
 	}
+	return nil
+}
+
+func (self *Record) Deserialization(source *ZeroCopySource, version byte) error {
+	t, _, irregular, eof := source.NextString()
+	data, _, irregular, eof := source.NextVarBytes()
+	if eof {
+		return io.ErrUnexpectedEOF
+	}
+	if irregular {
+		return ErrIrregularData
+	}
+	self.RecordType = t
+	self.RecordData = data
+	return nil
+}
+
+func (self *Record) Serialization(sink *ZeroCopySink, version byte) error {
+	sink.WriteString(self.RecordType)
+	sink.WriteVarBytes(self.RecordData)
 	return nil
 }

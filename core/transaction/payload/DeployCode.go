@@ -2,6 +2,7 @@ package payload
 
 import (
 	"DNA/common/serialization"
+	. "DNA/common"
 	. "DNA/core/code"
 	"io"
 )
@@ -87,6 +88,53 @@ func (dc *DeployCode) Deserialize(r io.Reader, version byte) error {
 	dc.Description, err = serialization.ReadVarString(r)
 	if err != nil {
 		return err
+	}
+
+	return nil
+}
+
+func (dc *DeployCode) Serialization(sink *ZeroCopySink, version byte) error {
+	dc.Code.Serialization(sink)
+	sink.WriteString(dc.Name)
+	sink.WriteString(dc.CodeVersion)
+	sink.WriteString(dc.Author)
+	sink.WriteString(dc.Email)
+	sink.WriteString(dc.Description)
+
+	return nil
+}
+
+//note: DeployCode.Code has data reference of param source
+func (dc *DeployCode) Deserialization(source *ZeroCopySource, version byte) error {
+	dc.Code.Deserialization(source)
+	var eof, irregular bool
+	dc.Name, _, irregular, eof = source.NextString()
+	if irregular {
+		return ErrIrregularData
+	}
+
+	dc.CodeVersion, _, irregular, eof = source.NextString()
+	if irregular {
+		return ErrIrregularData
+	}
+
+	dc.Author, _, irregular, eof = source.NextString()
+	if irregular {
+		return ErrIrregularData
+	}
+
+	dc.Email, _, irregular, eof = source.NextString()
+	if irregular {
+		return ErrIrregularData
+	}
+
+	dc.Description, _, irregular, eof = source.NextString()
+	if irregular {
+		return ErrIrregularData
+	}
+
+	if eof {
+		return io.ErrUnexpectedEOF
 	}
 
 	return nil

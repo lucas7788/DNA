@@ -1,6 +1,7 @@
 package payload
 
 import (
+	. "DNA/common"
 	"DNA/common/serialization"
 	"DNA/crypto"
 	. "DNA/errors"
@@ -40,6 +41,11 @@ func (self *BookKeeper) Serialize(w io.Writer, version byte) error {
 	return err
 }
 
+func (self *BookKeeper) Serialization(sink *ZeroCopySink, version byte) error {
+	sink.WriteBytes(self.Data(version))
+	return nil
+}
+
 func (self *BookKeeper) Deserialize(r io.Reader, version byte) error {
 	self.PubKey = new(crypto.PubKey)
 	err := self.PubKey.DeSerialize(r)
@@ -61,6 +67,26 @@ func (self *BookKeeper) Deserialize(r io.Reader, version byte) error {
 	if err != nil {
 		return NewDetailErr(err, ErrNoCode, "[BookKeeper], Issuer Deserialize failed.")
 	}
+	return nil
+}
 
+func (self *BookKeeper) Deserialization(source *ZeroCopySource, version byte) error {
+	self.PubKey = new(crypto.PubKey)
+	err := self.PubKey.DeSerialization(source)
+	if err != nil {
+		return NewDetailErr(err, ErrNoCode, "[BookKeeper], PubKey Deserialize failed.")
+	}
+	p, eof := source.NextByte()
+	if eof {
+		return io.ErrUnexpectedEOF
+	}
+	self.Action = BookKeeperAction(p)
+	data, _, irregular, eof := source.NextVarBytes()
+	self.Cert = data
+	if irregular {
+		return ErrIrregularData
+	}
+	self.Issuer = new(crypto.PubKey)
+	self.Issuer.DeSerialization(source)
 	return nil
 }

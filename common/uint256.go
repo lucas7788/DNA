@@ -9,9 +9,11 @@ import (
 	. "DNA/errors"
 )
 
-const UINT256SIZE int = 32
+const UINT256SIZE = 32
 
 type Uint256 [UINT256SIZE]uint8
+
+var UINT256_EMPTY = Uint256{}
 
 func (u *Uint256) CompareTo(o Uint256) int {
 	x := u.ToArray()

@@ -1,6 +1,7 @@
 package asset
 
 import (
+	"DNA/common"
 	"DNA/common/serialization"
 	. "DNA/errors"
 	"errors"
@@ -65,6 +66,15 @@ func (a *Asset) Serialize(w io.Writer) error {
 	return nil
 }
 
+func (a *Asset)Serialization(sink *common.ZeroCopySink) error {
+	sink.WriteString(a.Name)
+	sink.WriteString(a.Description)
+	sink.WriteBytes([]byte{byte(a.Precision)})
+    sink.WriteBytes([]byte{byte(a.AssetType)})
+	sink.WriteBytes([]byte{byte(a.RecordType)})
+	return nil
+}
+
 // Deserialize is the implement of SignableData interface.
 func (a *Asset) Deserialize(r io.Reader) error {
 	name, err := serialization.ReadVarString(r)
@@ -95,6 +105,26 @@ func (a *Asset) Deserialize(r io.Reader) error {
 		a.RecordType = AssetRecordType(p[0])
 	} else {
 		return NewDetailErr(errors.New("[Asset], RecordType deserialize failed."), ErrNoCode, "")
+	}
+	return nil
+}
+
+func (a *Asset) Deserialization(source *common.ZeroCopySource) error {
+	name, _, irregular, eof := source.NextString()
+	description, _, irregular, eof := source.NextString()
+	p, _, irregular, eof := source.NextVarBytes()
+	t, _, irregular, eof := source.NextVarBytes()
+	r, _, irregular, eof := source.NextVarBytes()
+	a.Name = name
+	a.Description = description
+	a.Precision = p[0]
+	a.AssetType = AssetType(t[0])
+	a.RecordType = AssetRecordType(r[0])
+	if eof {
+		return io.ErrUnexpectedEOF
+	}
+	if irregular {
+		return common.ErrIrregularData
 	}
 	return nil
 }

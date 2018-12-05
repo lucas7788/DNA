@@ -1,6 +1,7 @@
 package transaction
 
 import (
+	"DNA/common"
 	"DNA/common/serialization"
 	. "DNA/errors"
 	"errors"
@@ -68,4 +69,33 @@ func (tx *TxAttribute) Deserialize(r io.Reader) error {
 	}
 	return nil
 
+}
+
+func (tx *TxAttribute) Deserialization(source *common.ZeroCopySource) error {
+	val,eof := source.NextBytes(1)
+	if eof {
+		return io.ErrUnexpectedEOF
+	}
+	tx.Usage = TransactionAttributeUsage(val[0])
+	if !IsValidAttributeType(tx.Usage) {
+		return NewDetailErr(errors.New("[TxAttribute] error"), ErrNoCode, "Unsupported attribute Description.")
+	}
+	data, _, irregular, eof := source.NextVarBytes()
+	tx.Data = data
+	if eof {
+		return io.ErrUnexpectedEOF
+	}
+	if irregular {
+		return common.ErrIrregularData
+	}
+	return nil
+}
+
+func (tx *TxAttribute) Serialization(sink *common.ZeroCopySink) error {
+	sink.WriteByte(byte(tx.Usage))
+	if !IsValidAttributeType(tx.Usage) {
+		return NewDetailErr(errors.New("[TxAttribute] error"), ErrNoCode, "Unsupported attribute Description.")
+	}
+	sink.WriteVarBytes(tx.Data)
+	return nil
 }

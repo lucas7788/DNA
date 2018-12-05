@@ -15,6 +15,8 @@ import (
 	"sort"
 )
 
+const MAX_TX_SIZE = 1024 * 1024 // The max size of a transaction to prevent DOS attacks
+
 //for different transaction types with different payload format
 //and transaction process methods
 type TransactionType byte
@@ -41,6 +43,10 @@ type Payload interface {
 	Serialize(w io.Writer, version byte) error
 
 	Deserialize(r io.Reader, version byte) error
+
+	Serialization(sink *ZeroCopySink, version byte) error
+
+	Deserialization(source *ZeroCopySource, version byte) error
 }
 
 //Transaction is used for carry information or action to Ledger
@@ -66,6 +72,132 @@ type Transaction struct {
 	hash *Uint256
 }
 
+// Transaction has internal reference of param `source`
+func (tx *Transaction) Deserialization(source *ZeroCopySource) error {
+	err := tx.deserializationUnsigned(source)
+	if err != nil {
+		return err
+	}
+	length, _, irregular, eof := source.NextVarUint()
+	if irregular {
+		return ErrIrregularData
+	}
+	if eof {
+		return io.ErrUnexpectedEOF
+	}
+	programHashes := []*program.Program{}
+	if length > 0 {
+		for i:=0; i< int(length); i++ {
+			outputHashes := new(program.Program)
+			outputHashes.Deserialization(source)
+			programHashes = append(programHashes, outputHashes)
+		}
+		tx.Programs = programHashes
+	}
+	return nil
+}
+
+func (tx *Transaction) deserializationUnsigned(source *ZeroCopySource) error {
+	txtype, eof := source.NextByte()
+	if eof {
+		return io.ErrUnexpectedEOF
+	}
+	tx.TxType = TransactionType(txtype)
+	tx.DeserializationUnsignedWithoutType(source)
+	return nil
+}
+
+func (tx *Transaction) DeserializationUnsignedWithoutType(source *ZeroCopySource) error {
+	var irregular, eof bool
+	tx.PayloadVersion, eof = source.NextByte()
+	if eof {
+		return io.ErrUnexpectedEOF
+	}
+	var pl Payload
+	switch tx.TxType {
+	case RegisterAsset:
+		pl = new(payload.RegisterAsset)
+	case IssueAsset:
+		pl = new(payload.IssueAsset)
+	case TransferAsset:
+		pl = new(payload.TransferAsset)
+	case BookKeeping:
+		pl = new(payload.BookKeeping)
+	case BookKeeper:
+		pl = new(payload.BookKeeper)
+	case PrivacyPayload:
+		pl = new(payload.PrivacyPayload)
+	case DataFile:
+		pl = new(payload.DataFile)
+	case Record:
+		pl = new(payload.Record)
+	case DeployCode:
+		pl = new(payload.DeployCode)
+	default:
+		return fmt.Errorf("unsupported tx type %v", tx.Type())
+	}
+	err := pl.Deserialization(source, tx.PayloadVersion)
+	if err != nil {
+		return err
+	}
+	tx.Payload = pl
+
+	var length uint64
+	length, _, irregular, eof = source.NextVarUint()
+	if irregular {
+		return ErrIrregularData
+	}
+	if eof {
+		return io.ErrUnexpectedEOF
+	}
+
+	if length > uint64(0) {
+		for i:=uint64(0);i< length; i++ {
+			attr := new(TxAttribute)
+			attr.Deserialization(source)
+			tx.Attributes = append(tx.Attributes, attr)
+		}
+	}
+	//UTXOInputs
+	length, _, irregular, eof = source.NextVarUint()
+	if length > uint64(0) {
+		for i:= uint64(0);i<length;i++ {
+			utxo := new(UTXOTxInput)
+			utxo.Deserialization(source)
+			tx.UTXOInputs = append(tx.UTXOInputs, utxo)
+		}
+	}
+	//Outputs
+	length, _, irregular, eof = source.NextVarUint()
+	if length > uint64(0) {
+		for i:= uint64(0);i<length;i++ {
+			o := new(TxOutput)
+			o.Deserialization(source)
+			tx.Outputs = append(tx.Outputs, o)
+		}
+	}
+	return nil
+}
+
+func (tx *Transaction) Serialization(sink *ZeroCopySink) error {
+    err := tx.SerializationUnsigned(sink)
+    if err != nil {
+		return NewDetailErr(err, ErrNoCode, "Transaction txSerializeUnsigned Serialize failed.")
+	}
+	//Serialize  Transaction's programs
+	lens := uint64(len(tx.Programs))
+	sink.WriteVarUint(lens)
+	if lens > 0 {
+		for _, p := range tx.Programs {
+			err = p.Serialization(sink)
+			if err != nil {
+				return NewDetailErr(err, ErrNoCode, "Transaction Programs Serialize failed.")
+			}
+		}
+	}
+	return nil
+}
+
 //Serialize the Transaction
 func (tx *Transaction) Serialize(w io.Writer) error {
 
@@ -85,6 +217,38 @@ func (tx *Transaction) Serialize(w io.Writer) error {
 			if err != nil {
 				return NewDetailErr(err, ErrNoCode, "Transaction Programs Serialize failed.")
 			}
+		}
+	}
+	return nil
+}
+
+func (tx *Transaction) SerializationUnsigned(sink *ZeroCopySink) error {
+    sink.WriteBytes([]byte{byte(tx.TxType)})
+    sink.WriteBytes([]byte{byte(tx.PayloadVersion)})
+	if tx.Payload == nil {
+		return errors.New("Transaction Payload is nil.")
+	}
+	tx.Payload.Serialization(sink, tx.PayloadVersion)
+	//[]*txAttribute
+    sink.WriteVarUint(uint64((len(tx.Attributes))))
+	if len(tx.Attributes) > 0 {
+		for _, attr := range tx.Attributes {
+			attr.Serialization(sink)
+		}
+	}
+	//[]*UTXOInputs
+	sink.WriteVarUint(uint64(len(tx.UTXOInputs)))
+	if len(tx.UTXOInputs) > 0 {
+		for _, utxo := range tx.UTXOInputs {
+			utxo.Serialization(sink)
+		}
+	}
+	// TODO BalanceInputs
+	//[]*Outputs
+	sink.WriteVarUint(uint64(len(tx.Outputs)))
+	if len(tx.Outputs) > 0 {
+		for _, output := range tx.Outputs {
+			output.Serialization(sink)
 		}
 	}
 	return nil
@@ -308,7 +472,7 @@ func (tx *Transaction) GetProgramHashes() ([]Uint160, error) {
 			case *payload.RegisterAsset:
 				hashs = append(hashs, v1.Controller)
 			default:
-				return nil, NewDetailErr(errors.New("[Transaction] error"), ErrNoCode, fmt.Sprintf("[Transaction], payload is illegal", k))
+				return nil, NewDetailErr(errors.New("[Transaction] error"), ErrNoCode, fmt.Sprintf("[Transaction], payload is illegal:=%x", k))
 			}
 		}
 	case DataFile:

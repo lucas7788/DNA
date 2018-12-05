@@ -1,6 +1,7 @@
 package crypto
 
 import (
+	"DNA/common"
 	"DNA/common/serialization"
 	"DNA/crypto/p256r1"
 	"DNA/crypto/sm2"
@@ -127,6 +128,24 @@ func (e *PubKey) Serialize(w io.Writer) error {
 	return nil
 }
 
+func (e *PubKey) Serialization(sink *common.ZeroCopySink) error {
+	bufX := []byte{}
+	if e.X.Sign() == -1 {
+		// prefix 0x00 means the big number X is negative
+		bufX = append(bufX, 0x00)
+	}
+	bufX = append(bufX, e.X.Bytes()...)
+	sink.WriteVarBytes(bufX)
+	bufY := []byte{}
+	if e.Y.Sign() == -1 {
+		// prefix 0x00 means the big number Y is negative
+		bufY = append(bufY, 0x00)
+	}
+	bufY = append(bufY, e.Y.Bytes()...)
+	sink.WriteVarBytes(bufY)
+	return nil
+}
+
 func (e *PubKey) DeSerialize(r io.Reader) error {
 	bufX, err := serialization.ReadVarBytes(r)
 	if err != nil {
@@ -149,6 +168,27 @@ func (e *PubKey) DeSerialize(r io.Reader) error {
 	return nil
 }
 
+func (e *PubKey) DeSerialization(source *common.ZeroCopySource) error {
+	bufX, _, irregular,eof :=source.NextVarBytes()
+	e.X = big.NewInt(0)
+	e.X = e.X.SetBytes(bufX)
+	if len(bufX) == util.NEGBIGNUMLEN {
+		e.X.Neg(e.X)
+	}
+	bufY, _, irregular,eof :=source.NextVarBytes()
+	e.Y = big.NewInt(0)
+	e.Y = e.Y.SetBytes(bufY)
+	if len(bufY) == util.NEGBIGNUMLEN {
+		e.Y.Neg(e.Y)
+	}
+	if eof {
+		return io.ErrUnexpectedEOF
+	}
+	if irregular {
+		return common.ErrIrregularData
+	}
+	return nil
+}
 type PubKeySlice []*PubKey
 
 func (p PubKeySlice) Len() int { return len(p) }

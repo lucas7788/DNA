@@ -1,6 +1,9 @@
 package payload
 
-import "io"
+import (
+	"DNA/common"
+	"io"
+)
 
 const TransferAssetayloadVersion byte = 0x00
 
@@ -18,5 +21,13 @@ func (a *TransferAsset) Serialize(w io.Writer, version byte) error {
 }
 
 func (a *TransferAsset) Deserialize(r io.Reader, version byte) error {
+	return nil
+}
+
+func (a *TransferAsset) Serialization(sink *common.ZeroCopySink, version byte) error  {
+	return nil
+}
+
+func (a *TransferAsset) Deserialization(source *common.ZeroCopySource, version byte) error {
 	return nil
 }
