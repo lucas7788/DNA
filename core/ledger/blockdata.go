@@ -33,6 +33,15 @@ func (bd *Blockdata) Serialize(w io.Writer) {
 	}
 }
 
+func (bd *Blockdata) Serialization(sink *ZeroCopySink) error {
+	bd.SerializationUnsigned(sink)
+	sink.WriteByte(byte(1))
+	if bd.Program != nil {
+		bd.Program.Serialization(sink)
+	}
+	return nil
+}
+
 //Serialize the blockheader data without program
 func (bd *Blockdata) SerializeUnsigned(w io.Writer) error {
 	//REVD: implement blockheader SerializeUnsigned
@@ -43,6 +52,17 @@ func (bd *Blockdata) SerializeUnsigned(w io.Writer) error {
 	serialization.WriteUint32(w, bd.Height)
 	serialization.WriteUint64(w, bd.ConsensusData)
 	bd.NextBookKeeper.Serialize(w)
+	return nil
+}
+
+func (bd *Blockdata) SerializationUnsigned(sink *ZeroCopySink) error {
+    sink.WriteUint32(bd.Version)
+    sink.WriteUint256(bd.PrevBlockHash)
+    sink.WriteUint256(bd.TransactionsRoot)
+    sink.WriteUint32(bd.Timestamp)
+    sink.WriteUint32(bd.Height)
+    sink.WriteUint64(bd.ConsensusData)
+    sink.WriteUint160(bd.NextBookKeeper)
 	return nil
 }
 
@@ -67,6 +87,39 @@ func (bd *Blockdata) Deserialize(r io.Reader) error {
 		return NewDetailErr(err, ErrNoCode, "Blockdata item Program Deserialize failed.")
 	}
 	bd.Program = pg
+	return nil
+}
+
+func (bd *Blockdata) Deserialization(source *ZeroCopySource) error {
+	bd.DeserializationUnsigned(source)
+	b, eof := source.NextByte()
+	if eof {
+		return io.ErrUnexpectedEOF
+	}
+	if b != byte(1){
+		return NewDetailErr(errors.New("Blockdata Deserialize get format error."), ErrNoCode, "")
+	}
+	pg := new(program.Program)
+	err := pg.Deserialization(source)
+	if err != nil {
+		return NewDetailErr(err, ErrNoCode, "Blockdata item Program Deserialize failed.")
+	}
+	bd.Program = pg
+	return nil
+}
+
+func (bd *Blockdata) DeserializationUnsigned(source *ZeroCopySource) error {
+	var eof bool
+	bd.Version, eof = source.NextUint32()
+	bd.PrevBlockHash, eof = source.NextHash()
+	bd.TransactionsRoot, eof = source.NextHash()
+	bd.Timestamp, eof = source.NextUint32()
+	bd.Height, eof = source.NextUint32()
+	bd.ConsensusData, eof = source.NextUint64()
+	bd.NextBookKeeper, eof = source.NextUint160()
+	if eof {
+		return io.ErrUnexpectedEOF
+	}
 	return nil
 }
 

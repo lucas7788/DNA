@@ -37,6 +37,46 @@ func (b *Block) Serialize(w io.Writer) error {
 	return nil
 }
 
+func (b *Block) Serialization(sink *ZeroCopySink) error {
+	err := b.Blockdata.Serialization(sink)
+	if err != nil {
+		return err
+	}
+	sink.WriteUint32(uint32(len(b.Transactions)))
+	for _, transaction := range b.Transactions {
+		transaction.Serialization(sink)
+	}
+	return nil
+}
+
+func (b *Block) Deserialization(source *ZeroCopySource) error {
+	if b.Blockdata == nil {
+		b.Blockdata = new(Blockdata)
+	}
+	b.Blockdata.Deserialization(source)
+	var eof bool
+    Len, eof := source.NextUint32()
+    if eof {
+    	return io.ErrUnexpectedEOF
+	}
+	var txhash Uint256
+	var tharray []Uint256
+	var i uint32
+	for i = 0; i < Len; i++ {
+		transaction := new(tx.Transaction)
+		transaction.Deserialization(source)
+		txhash = transaction.Hash()
+		b.Transactions = append(b.Transactions, transaction)
+		tharray = append(tharray, txhash)
+	}
+	var err error
+	b.Blockdata.TransactionsRoot, err = crypto.ComputeRoot(tharray)
+	if err != nil {
+		return NewDetailErr(err, ErrNoCode, "Block Deserialize merkleTree compute failed")
+	}
+	return nil
+}
+
 func (b *Block) Deserialize(r io.Reader) error {
 	if b.Blockdata == nil {
 		b.Blockdata = new(Blockdata)

@@ -38,8 +38,11 @@ func (p *Program) Serialization(sink *common.ZeroCopySink) error {
 
 func (p *Program) Deserialization(source *common.ZeroCopySource) error {
 	var irregular, eof bool
-	p.Parameter, _, irregular, eof = source.NextVarBytes()
-	p.Code, _, irregular, eof = source.NextVarBytes()
+	var data []byte
+	data, _, irregular, eof = source.NextVarBytes()
+	p.Parameter = data
+	data, _, irregular, eof = source.NextVarBytes()
+	p.Code = data
 	if irregular {
 		return common.ErrIrregularData
 	}
