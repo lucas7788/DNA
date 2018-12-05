@@ -59,15 +59,20 @@ func (fc *FunctionCode) Serialization(sink *ZeroCopySink) error {
 
 func (fc *FunctionCode) Deserialization(source *ZeroCopySource) error {
 	var eof, irregular bool
-	paramType, _, irregular, eof := source.NextVarBytes()
-	fc.ParameterTypes = ByteToContractParameterType(paramType)
-	fc.Code, _, irregular, eof = source.NextVarBytes()
+	var data []byte
+	data, _, irregular, eof = source.NextVarBytes()
+	if irregular {
+		return ErrIrregularData
+	}
+	fc.ParameterTypes = ByteToContractParameterType(data)
+	data, _, irregular, eof = source.NextVarBytes()
 	if irregular {
 		return ErrIrregularData
 	}
 	if eof {
 		return io.ErrUnexpectedEOF
 	}
+	fc.Code = data
 	return nil
 }
 

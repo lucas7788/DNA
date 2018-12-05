@@ -44,7 +44,10 @@ func (b *Block) Serialization(sink *ZeroCopySink) error {
 	}
 	sink.WriteUint32(uint32(len(b.Transactions)))
 	for _, transaction := range b.Transactions {
-		transaction.Serialization(sink)
+		err = transaction.Serialization(sink)
+		if err != nil {
+			return err
+		}
 	}
 	return nil
 }
@@ -55,16 +58,19 @@ func (b *Block) Deserialization(source *ZeroCopySource) error {
 	}
 	b.Blockdata.Deserialization(source)
 	var eof bool
-    Len, eof := source.NextUint32()
-    if eof {
-    	return io.ErrUnexpectedEOF
+	Len, eof := source.NextUint32()
+	if eof {
+		return io.ErrUnexpectedEOF
 	}
 	var txhash Uint256
 	var tharray []Uint256
 	var i uint32
 	for i = 0; i < Len; i++ {
 		transaction := new(tx.Transaction)
-		transaction.Deserialization(source)
+		err := transaction.Deserialization(source)
+		if err != nil {
+			return err
+		}
 		txhash = transaction.Hash()
 		b.Transactions = append(b.Transactions, transaction)
 		tharray = append(tharray, txhash)
@@ -209,13 +215,13 @@ func GenesisBlockInit(defaultBookKeeper []*crypto.PubKey) (*Block, error) {
 	//transaction
 	trans := &tx.Transaction{
 		TxType:         tx.BookKeeping,
-		PayloadVersion:  byte(0),
-		Payload:       nil,
-		Attributes:    []*tx.TxAttribute{},
-		UTXOInputs:    []*tx.UTXOTxInput{},
-		BalanceInputs: []*tx.BalanceTxInput{},
-		Outputs:       []*tx.TxOutput{},
-		Programs:      []*program.Program{},
+		PayloadVersion: byte(0),
+		Payload:        nil,
+		Attributes:     []*tx.TxAttribute{},
+		UTXOInputs:     []*tx.UTXOTxInput{},
+		BalanceInputs:  []*tx.BalanceTxInput{},
+		Outputs:        []*tx.TxOutput{},
+		Programs:       []*program.Program{},
 	}
 	//block
 	genesisBlock := &Block{
