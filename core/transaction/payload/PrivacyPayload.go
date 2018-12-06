@@ -126,6 +126,9 @@ func (ea *EcdhAes256) Serialize(w io.Writer) error {
 }
 func (ea *EcdhAes256) Serialization(sink *ZeroCopySink) error {
 	err := ea.FromPubkey.Serialization(sink)
+	if err != nil {
+		return err
+	}
 	err = ea.ToPubkey.Serialization(sink)
 	if err != nil {
 		return err
@@ -156,7 +159,10 @@ func (ea *EcdhAes256) Deserialize(r io.Reader) error {
 
 func (ea *EcdhAes256) Deserialization(source *ZeroCopySource) error {
 	err := ea.FromPubkey.DeSerialization(source)
-	ea.ToPubkey.DeSerialization(source)
+	if err != nil {
+		return err
+	}
+	err = ea.ToPubkey.DeSerialization(source)
 	if err != nil {
 		return err
 	}

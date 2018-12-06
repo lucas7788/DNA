@@ -17,13 +17,19 @@ func (h *Header) Serialize(w io.Writer) {
 }
 
 func (h *Header) Serialization(sink *common.ZeroCopySink) error {
-	h.Blockdata.Serialization(sink)
+	err := h.Blockdata.Serialization(sink)
+	if err != nil {
+		return err
+	}
 	sink.WriteByte(byte(0))
 	return nil
 }
 
 func (h *Header) Deserialization(source *common.ZeroCopySource) error {
-	h.Blockdata.Deserialization(source)
+	err := h.Blockdata.Deserialization(source)
+	if err != nil {
+		return err
+	}
 	_, eof := source.NextByte()
     if eof {
     	return io.ErrUnexpectedEOF
@@ -33,10 +39,13 @@ func (h *Header) Deserialization(source *common.ZeroCopySource) error {
 
 func (h *Header) Deserialize(r io.Reader) error {
 	header := new(Blockdata)
-	header.Deserialize(r)
+	err := header.Deserialize(r)
+	if err != nil {
+		return err
+	}
 	h.Blockdata = header
 	var headerFlag [1]byte
-	_, err := io.ReadFull(r, headerFlag[:])
+	_, err = io.ReadFull(r, headerFlag[:])
 	if err != nil {
 		return err
 	}

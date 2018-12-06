@@ -37,7 +37,10 @@ func (bd *Blockdata) Serialization(sink *ZeroCopySink) error {
 	bd.SerializationUnsigned(sink)
 	sink.WriteByte(byte(1))
 	if bd.Program != nil {
-		bd.Program.Serialization(sink)
+		err := bd.Program.Serialization(sink)
+		if err != nil {
+			return err
+		}
 	}
 	return nil
 }
@@ -56,13 +59,13 @@ func (bd *Blockdata) SerializeUnsigned(w io.Writer) error {
 }
 
 func (bd *Blockdata) SerializationUnsigned(sink *ZeroCopySink) error {
-    sink.WriteUint32(bd.Version)
-    sink.WriteUint256(bd.PrevBlockHash)
-    sink.WriteUint256(bd.TransactionsRoot)
-    sink.WriteUint32(bd.Timestamp)
-    sink.WriteUint32(bd.Height)
-    sink.WriteUint64(bd.ConsensusData)
-    sink.WriteUint160(bd.NextBookKeeper)
+	sink.WriteUint32(bd.Version)
+	sink.WriteUint256(bd.PrevBlockHash)
+	sink.WriteUint256(bd.TransactionsRoot)
+	sink.WriteUint32(bd.Timestamp)
+	sink.WriteUint32(bd.Height)
+	sink.WriteUint64(bd.ConsensusData)
+	sink.WriteUint160(bd.NextBookKeeper)
 	return nil
 }
 
@@ -96,7 +99,7 @@ func (bd *Blockdata) Deserialization(source *ZeroCopySource) error {
 	if eof {
 		return io.ErrUnexpectedEOF
 	}
-	if b != byte(1){
+	if b != byte(1) {
 		return NewDetailErr(errors.New("Blockdata Deserialize get format error."), ErrNoCode, "")
 	}
 	pg := new(program.Program)
@@ -111,11 +114,29 @@ func (bd *Blockdata) Deserialization(source *ZeroCopySource) error {
 func (bd *Blockdata) DeserializationUnsigned(source *ZeroCopySource) error {
 	var eof bool
 	bd.Version, eof = source.NextUint32()
+	if eof {
+		return io.ErrUnexpectedEOF
+	}
 	bd.PrevBlockHash, eof = source.NextHash()
+	if eof {
+		return io.ErrUnexpectedEOF
+	}
 	bd.TransactionsRoot, eof = source.NextHash()
+	if eof {
+		return io.ErrUnexpectedEOF
+	}
 	bd.Timestamp, eof = source.NextUint32()
+	if eof {
+		return io.ErrUnexpectedEOF
+	}
 	bd.Height, eof = source.NextUint32()
+	if eof {
+		return io.ErrUnexpectedEOF
+	}
 	bd.ConsensusData, eof = source.NextUint64()
+	if eof {
+		return io.ErrUnexpectedEOF
+	}
 	bd.NextBookKeeper, eof = source.NextUint160()
 	if eof {
 		return io.ErrUnexpectedEOF
@@ -160,7 +181,6 @@ func (bd *Blockdata) DeserializeUnsigned(r io.Reader) error {
 
 	//NextBookKeeper
 	bd.NextBookKeeper.Deserialize(r)
-
 	return nil
 }
 

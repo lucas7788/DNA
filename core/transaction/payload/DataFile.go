@@ -47,7 +47,10 @@ func (a *DataFile) Serialization(sink *ZeroCopySink, version byte) error {
 	sink.WriteString(a.IPFSPath)
 	sink.WriteString(a.Filename)
 	sink.WriteString(a.Note)
-	a.Issuer.Serialization(sink)
+	err := a.Issuer.Serialization(sink)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -79,7 +82,19 @@ func (a *DataFile) Deserialize(r io.Reader, version byte) error {
 func (a *DataFile) Deserialization(source *ZeroCopySource, version byte) error {
 	var irregular, eof bool
 	a.IPFSPath, _, irregular, eof = source.NextString()
+	if irregular {
+		return ErrIrregularData
+	}
+	if eof {
+		return io.ErrUnexpectedEOF
+	}
 	a.Filename, _, irregular, eof = source.NextString()
+	if irregular {
+		return ErrIrregularData
+	}
+	if eof {
+		return io.ErrUnexpectedEOF
+	}
 	a.Note, _, irregular, eof = source.NextString()
 	if irregular {
 		return ErrIrregularData
@@ -87,6 +102,9 @@ func (a *DataFile) Deserialization(source *ZeroCopySource, version byte) error {
 	if eof {
 		return io.ErrUnexpectedEOF
 	}
-	a.Issuer.DeSerialization(source)
+	err := a.Issuer.DeSerialization(source)
+	if err != nil {
+		return err
+	}
 	return nil
 }

@@ -43,15 +43,18 @@ func (p *Program) Deserialization(source *common.ZeroCopySource) error {
 	if irregular {
 		return common.ErrIrregularData
 	}
+	if eof {
+		return io.ErrUnexpectedEOF
+	}
 	p.Parameter = data
 	data, _, irregular, eof = source.NextVarBytes()
 	if irregular {
 		return common.ErrIrregularData
 	}
-	p.Code = data
 	if eof {
 		return io.ErrUnexpectedEOF
 	}
+	p.Code = data
 	return nil
 }
 

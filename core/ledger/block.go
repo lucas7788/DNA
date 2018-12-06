@@ -56,7 +56,10 @@ func (b *Block) Deserialization(source *ZeroCopySource) error {
 	if b.Blockdata == nil {
 		b.Blockdata = new(Blockdata)
 	}
-	b.Blockdata.Deserialization(source)
+	err := b.Blockdata.Deserialization(source)
+	if err != nil {
+		return NewDetailErr(err, ErrNoCode, "Blockdata Deserialize failed")
+	}
 	var eof bool
 	Len, eof := source.NextUint32()
 	if eof {
@@ -69,13 +72,12 @@ func (b *Block) Deserialization(source *ZeroCopySource) error {
 		transaction := new(tx.Transaction)
 		err := transaction.Deserialization(source)
 		if err != nil {
-			return err
+			return NewDetailErr(err, ErrNoCode, "Transaction Deserialize failed")
 		}
 		txhash = transaction.Hash()
 		b.Transactions = append(b.Transactions, transaction)
 		tharray = append(tharray, txhash)
 	}
-	var err error
 	b.Blockdata.TransactionsRoot, err = crypto.ComputeRoot(tharray)
 	if err != nil {
 		return NewDetailErr(err, ErrNoCode, "Block Deserialize merkleTree compute failed")
