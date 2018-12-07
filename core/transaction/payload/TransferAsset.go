@@ -24,7 +24,7 @@ func (a *TransferAsset) Deserialize(r io.Reader, version byte) error {
 	return nil
 }
 
-func (a *TransferAsset) Serialization(sink *common.ZeroCopySink, version byte) error  {
+func (a *TransferAsset) Serialization(sink *common.ZeroCopySink, version byte) error {
 	return nil
 }
 

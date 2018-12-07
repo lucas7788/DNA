@@ -5,7 +5,6 @@ import (
 	"io"
 )
 
-
 const IssueAssetPayloadVersion byte = 0x00
 
 type IssueAsset struct {

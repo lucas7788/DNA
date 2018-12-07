@@ -48,7 +48,7 @@ func (a *BookKeeping) Deserialize(r io.Reader, version byte) error {
 	return nil
 }
 
-func (a *BookKeeping) Deserialization(source *ZeroCopySource,version byte) error {
+func (a *BookKeeping) Deserialization(source *ZeroCopySource, version byte) error {
 	if version == BookKeepingPayloadVersionBase {
 		return nil
 	}
@@ -59,5 +59,3 @@ func (a *BookKeeping) Deserialization(source *ZeroCopySource,version byte) error
 	a.Nonce = data
 	return nil
 }
-
-

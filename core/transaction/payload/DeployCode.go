@@ -1,8 +1,8 @@
 package payload
 
 import (
-	"DNA/common/serialization"
 	. "DNA/common"
+	"DNA/common/serialization"
 	. "DNA/core/code"
 	"io"
 )
@@ -108,7 +108,7 @@ func (dc *DeployCode) Serialization(sink *ZeroCopySink, version byte) error {
 
 //note: DeployCode.Code has data reference of param source
 func (dc *DeployCode) Deserialization(source *ZeroCopySource, version byte) error {
-    f := &FunctionCode{}
+	f := &FunctionCode{}
 	err := f.Deserialization(source)
 	if err != nil {
 		return err

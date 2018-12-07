@@ -79,13 +79,13 @@ func (pp *PrivacyPayload) Deserialization(source *ZeroCopySource, version byte) 
 	//if irregular {
 	//	return common.ErrIrregularData
 	//}
-	payloadType,eof := source.NextByte()
+	payloadType, eof := source.NextByte()
 	if eof {
 		return io.ErrUnexpectedEOF
 	}
 
 	pp.PayloadType = EncryptedPayloadType(payloadType)
-	p, _, irregular,eof := source.NextVarBytes()
+	p, _, irregular, eof := source.NextVarBytes()
 	if irregular {
 		return common.ErrIrregularData
 	}
@@ -97,7 +97,7 @@ func (pp *PrivacyPayload) Deserialization(source *ZeroCopySource, version byte) 
 	if eof {
 		return io.EOF
 	}
-    pp.EncryptType = PayloadEncryptType(t)
+	pp.EncryptType = PayloadEncryptType(t)
 	switch pp.EncryptType {
 	case ECDH_AES256:
 		pp.EncryptAttr = new(EcdhAes256)
