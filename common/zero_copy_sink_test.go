@@ -20,8 +20,8 @@ package common
 import (
 	"testing"
 
-	"bytes"
 	ser "DNA/common/serialization"
+	"bytes"
 	"github.com/stretchr/testify/assert"
 )
 

@@ -18,9 +18,9 @@
 package common
 
 import (
+	"DNA/common/serialization"
 	"bytes"
 	"crypto/rand"
-	"DNA/common/serialization"
 	"testing"
 )
 

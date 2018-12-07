@@ -14,58 +14,58 @@ import (
 func TestSerialization(t *testing.T) {
 	attributes := make([]*TxAttribute, 0)
 	attribute := &TxAttribute{
-		Usage:Script,
-		Data:[]byte("test"),
-		Size:uint32(1),
-		}
+		Usage: Script,
+		Data:  []byte("test"),
+		Size:  uint32(1),
+	}
 	attributes = append(attributes, attribute)
 	bs, _ := common.HexToBytes("dded139727732e13640c0acba31c459b4cf1e96720fa286ec62946f9b11c36a1")
-	u, _ :=common.Uint256ParseFromBytes(bs)
+	u, _ := common.Uint256ParseFromBytes(bs)
 	inputs := make([]*UTXOTxInput, 0)
 	input := &UTXOTxInput{
-		ReferTxID:u,
+		ReferTxID:          u,
 		ReferTxOutputIndex: uint16(1),
 	}
 	inputs = append(inputs, input)
-	pu,_ := common.ToScriptHash("d7239affb684c3c224476eb7bd52d9b2cb5e2aab")
+	pu, _ := common.ToScriptHash("d7239affb684c3c224476eb7bd52d9b2cb5e2aab")
 	binputs := make([]*BalanceTxInput, 0)
 	binput := &BalanceTxInput{
-		AssetID:u,
-		Value:common.Fixed64(int64(1)),
-		ProgramHash:pu,
+		AssetID:     u,
+		Value:       common.Fixed64(int64(1)),
+		ProgramHash: pu,
 	}
 	binputs = append(binputs, binput)
 	outputs := make([]*TxOutput, 0)
 	output := &TxOutput{
-		AssetID:u,
-		Value:common.Fixed64(int64(1)),
-		ProgramHash:pu,
+		AssetID:     u,
+		Value:       common.Fixed64(int64(1)),
+		ProgramHash: pu,
 	}
 	outputs = append(outputs, output)
 	p := make([]*program.Program, 0)
 	pp := &program.Program{
-		Code:[]byte("1111"),
-		Parameter:[]byte("1111"),
+		Code:      []byte("1111"),
+		Parameter: []byte("1111"),
 	}
 	p = append(p, pp)
 	mapoutput := make(map[common.Uint256][]*TxOutput)
 	mapoutput[u] = outputs
 	mapfixed := make(map[common.Uint256]common.Fixed64)
 	mapfixed[u] = common.Fixed64(int64(1))
-	mapoutputamount := make(map[common.Uint256] common.Fixed64)
+	mapoutputamount := make(map[common.Uint256]common.Fixed64)
 	mapoutputamount[u] = common.Fixed64(int64(1))
-	tx := &Transaction {
-		TxType:Record,
+	tx := &Transaction{
+		TxType:         Record,
 		PayloadVersion: byte(0),
-		Payload:&payload.Record{
-			RecordType:"test",
-			RecordData:[]byte("ssss"),
+		Payload: &payload.Record{
+			RecordType: "test",
+			RecordData: []byte("ssss"),
 		},
-		Attributes:attributes,
-		UTXOInputs:inputs,
-		BalanceInputs:binputs,
-		Outputs:outputs,
-		Programs:p,
+		Attributes:    attributes,
+		UTXOInputs:    inputs,
+		BalanceInputs: binputs,
+		Outputs:       outputs,
+		Programs:      p,
 		//AssetOutputs:mapoutput,
 		//AssetInputAmount:mapfixed,
 		//AssetOutputAmount:mapoutputamount,

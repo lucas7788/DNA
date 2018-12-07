@@ -45,7 +45,7 @@ func (ui *UTXOTxInput) Deserialize(r io.Reader) error {
 }
 
 func (ui *UTXOTxInput) Deserialization(source *common.ZeroCopySource) error {
-	val,eof := source.NextBytes(common.UINT256SIZE)
+	val, eof := source.NextBytes(common.UINT256SIZE)
 	if eof {
 		return io.ErrUnexpectedEOF
 	}

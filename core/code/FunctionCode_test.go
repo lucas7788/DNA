@@ -14,7 +14,6 @@ func TestFuncCode(t *testing.T) {
 
 		// Contract parameter type list
 		ParameterTypes: []ContractParameterType{Boolean},
-
 	}
 	var buffer bytes.Buffer
 	f.Serialize(&buffer)

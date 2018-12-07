@@ -72,7 +72,7 @@ func (tx *TxAttribute) Deserialize(r io.Reader) error {
 }
 
 func (tx *TxAttribute) Deserialization(source *common.ZeroCopySource) error {
-	val,eof := source.NextBytes(1)
+	val, eof := source.NextBytes(1)
 	if eof {
 		return io.ErrUnexpectedEOF
 	}

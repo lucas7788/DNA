@@ -9,8 +9,8 @@ import (
 
 func TestTxOutput(t *testing.T) {
 	bs, _ := common.HexToBytes("dded139727732e13640c0acba31c459b4cf1e96720fa286ec62946f9b11c36a1")
-	u, _ :=common.Uint256ParseFromBytes(bs)
-	pu,_ := common.ToScriptHash("d7239affb684c3c224476eb7bd52d9b2cb5e2aab")
+	u, _ := common.Uint256ParseFromBytes(bs)
+	pu, _ := common.ToScriptHash("d7239affb684c3c224476eb7bd52d9b2cb5e2aab")
 	tx := &TxOutput{
 		AssetID:     u,
 		Value:       common.Fixed64(int64(100)),
@@ -32,7 +32,7 @@ func TestTxOutput(t *testing.T) {
 
 func TestUTXOTxInput_Deserialization(t *testing.T) {
 	bs, _ := common.HexToBytes("dded139727732e13640c0acba31c459b4cf1e96720fa286ec62946f9b11c36a1")
-	u, _ :=common.Uint256ParseFromBytes(bs)
+	u, _ := common.Uint256ParseFromBytes(bs)
 	utxo := &UTXOTxInput{
 		//Indicate the previous Tx which include the UTXO output for usage
 		ReferTxID: u,

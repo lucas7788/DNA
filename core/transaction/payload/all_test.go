@@ -3,21 +3,21 @@ package payload
 import (
 	"DNA/common"
 	"DNA/core/asset"
+	"DNA/core/code"
+	. "DNA/core/contract"
 	"DNA/crypto"
 	"bytes"
 	"github.com/magiconair/properties/assert"
 	"math/big"
 	"testing"
-	"DNA/core/code"
-	. "DNA/core/contract"
 )
 
 func TestBookKeepingSerialize(t *testing.T) {
 	b := &BookKeeping{
-		Nonce:uint64(10),
+		Nonce: uint64(10),
 	}
 	var buffer bytes.Buffer
-	b.Serialize(&buffer,byte(0))
+	b.Serialize(&buffer, byte(0))
 	sink := new(common.ZeroCopySink)
 	b.Serialization(sink, byte(0))
 	assert.Equal(t, buffer.Bytes(), sink.Bytes())
@@ -25,19 +25,19 @@ func TestBookKeepingSerialize(t *testing.T) {
 	source := common.NewZeroCopySource(sink.Bytes())
 
 	b2 := &BookKeeping{}
-    b2.Deserialization(source,byte(0))
+	b2.Deserialization(source, byte(0))
 	assert.Equal(t, b, b2)
 }
 func TestDataFile(t *testing.T) {
-	b:=new(big.Int)
+	b := new(big.Int)
 	b.SetInt64(int64(100))
 	d := &DataFile{
-		IPFSPath:"test",
-		Filename:"test",
-		Note:"test",
-		Issuer:&crypto.PubKey{
-			X:b,
-			Y:b,
+		IPFSPath: "test",
+		Filename: "test",
+		Note:     "test",
+		Issuer: &crypto.PubKey{
+			X: b,
+			Y: b,
 		},
 	}
 	var buffer bytes.Buffer
@@ -75,7 +75,6 @@ func TestDeployCode(t *testing.T) {
 	d.Serialization(sink, byte(0))
 	assert.Equal(t, buffer.Bytes(), sink.Bytes())
 
-
 	d2 := &DeployCode{}
 
 	source := common.NewZeroCopySource(sink.Bytes())
@@ -89,7 +88,7 @@ func TestPrivacyPayload(t *testing.T) {
 	b := new(big.Int)
 	b.SetInt64(int64(1))
 	e := &EcdhAes256{
-		FromPubkey: &crypto.PubKey{b,b},
+		FromPubkey: &crypto.PubKey{b, b},
 		ToPubkey:   &crypto.PubKey{b, b},
 		Nonce:      []byte{1},
 	}
@@ -141,12 +140,12 @@ func TestRegisterAsset(t *testing.T) {
 		AssetType:   asset.Token,
 		RecordType:  asset.Balance,
 	}
-	pu,_ := common.ToScriptHash("d7239affb684c3c224476eb7bd52d9b2cb5e2aab")
+	pu, _ := common.ToScriptHash("d7239affb684c3c224476eb7bd52d9b2cb5e2aab")
 	r := &RegisterAsset{
 		Asset:  a,
 		Amount: common.Fixed64(int64(100)),
 		//Precision  byte
-		Issuer:     &crypto.PubKey{b,b},
+		Issuer:     &crypto.PubKey{b, b},
 		Controller: pu,
 	}
 
@@ -158,7 +157,7 @@ func TestRegisterAsset(t *testing.T) {
 
 	assert.Equal(t, buffer.Bytes(), sink.Bytes())
 
-    r2 := &RegisterAsset{}
+	r2 := &RegisterAsset{}
 	source := common.NewZeroCopySource(sink.Bytes())
 	r2.Deserialization(source, byte(1))
 

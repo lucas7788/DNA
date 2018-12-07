@@ -29,7 +29,7 @@ func (o *TxOutput) Serialization(sink *common.ZeroCopySink) error {
 	return nil
 }
 func (o *TxOutput) Deserialization(source *common.ZeroCopySource) error {
-	val,eof := source.NextBytes(common.UINT256SIZE)
+	val, eof := source.NextBytes(common.UINT256SIZE)
 	if eof {
 		return io.ErrUnexpectedEOF
 	}
@@ -41,10 +41,9 @@ func (o *TxOutput) Deserialization(source *common.ZeroCopySource) error {
 	if eof {
 		return io.ErrUnexpectedEOF
 	}
-	o.ProgramHash ,eof = source.NextUint160()
+	o.ProgramHash, eof = source.NextUint160()
 	if eof {
 		return io.ErrUnexpectedEOF
 	}
 	return nil
 }
-

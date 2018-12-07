@@ -9,15 +9,15 @@ import (
 
 func TestAsset_Serialize(t *testing.T) {
 	a := &Asset{
-		Name:"test",
-		Description:"test",
-		Precision:byte(1),
-		AssetType:Token,
-		RecordType:UTXO,
+		Name:        "test",
+		Description: "test",
+		Precision:   byte(1),
+		AssetType:   Token,
+		RecordType:  UTXO,
 	}
 	var buffer bytes.Buffer
 	a.Serialize(&buffer)
-	raw:=common.ToHexString(buffer.Bytes())
+	raw := common.ToHexString(buffer.Bytes())
 	sink := &common.ZeroCopySink{}
 	a.Serialization(sink)
 	newstr := common.ToHexString(sink.Bytes())

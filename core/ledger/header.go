@@ -33,8 +33,8 @@ func (h *Header) Deserialization(source *common.ZeroCopySource) error {
 	}
 	h.Blockdata = blockData
 	_, eof := source.NextByte()
-    if eof {
-    	return io.ErrUnexpectedEOF
+	if eof {
+		return io.ErrUnexpectedEOF
 	}
 	return nil
 }

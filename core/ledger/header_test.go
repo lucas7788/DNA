@@ -10,7 +10,7 @@ import (
 func TestSerialize(t *testing.T) {
 	block := GenerateBlock()
 	header := &Header{
-		Blockdata:block.Blockdata,
+		Blockdata: block.Blockdata,
 	}
 	var buffer bytes.Buffer
 	header.Serialize(&buffer)
@@ -19,9 +19,7 @@ func TestSerialize(t *testing.T) {
 	header.Serialization(sink)
 	assert.Equal(t, buffer.Bytes(), sink.Bytes())
 
-
-	header2 := &Header{
-	}
+	header2 := &Header{}
 	source := common.NewZeroCopySource(sink.Bytes())
 	header2.Deserialization(source)
 	assert.Equal(t, header, header2)
