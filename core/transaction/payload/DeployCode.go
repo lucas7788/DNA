@@ -108,10 +108,12 @@ func (dc *DeployCode) Serialization(sink *ZeroCopySink, version byte) error {
 
 //note: DeployCode.Code has data reference of param source
 func (dc *DeployCode) Deserialization(source *ZeroCopySource, version byte) error {
-	err := dc.Code.Deserialization(source)
+    f := &FunctionCode{}
+	err := f.Deserialization(source)
 	if err != nil {
 		return err
 	}
+	dc.Code = f
 	var eof, irregular bool
 	dc.Name, _, irregular, eof = source.NextString()
 	if irregular {

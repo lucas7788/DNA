@@ -35,22 +35,6 @@ func (fc *FunctionCode) Serialize(w io.Writer) error {
 	return nil
 }
 
-// method of SerializableData
-func (fc *FunctionCode) Deserialize(r io.Reader) error {
-	p,err := serialization.ReadVarBytes(r)
-	if err != nil {
-		return err
-	}
-	fc.ParameterTypes = ByteToContractParameterType(p)
-
-	fc.Code,err = serialization.ReadVarBytes(r)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
 func (fc *FunctionCode) Serialization(sink *ZeroCopySink) error {
 	sink.WriteVarBytes(ContractParameterTypeToByte(fc.ParameterTypes))
 	sink.WriteVarBytes(fc.Code)
@@ -75,6 +59,23 @@ func (fc *FunctionCode) Deserialization(source *ZeroCopySource) error {
 	fc.Code = data
 	return nil
 }
+
+// method of SerializableData
+func (fc *FunctionCode) Deserialize(r io.Reader) error {
+	p,err := serialization.ReadVarBytes(r)
+	if err != nil {
+		return err
+	}
+	fc.ParameterTypes = ByteToContractParameterType(p)
+
+	fc.Code,err = serialization.ReadVarBytes(r)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 
 // method of ICode
 // Get code

@@ -102,6 +102,7 @@ func (a *DataFile) Deserialization(source *ZeroCopySource, version byte) error {
 	if eof {
 		return io.ErrUnexpectedEOF
 	}
+	a.Issuer = new(crypto.PubKey)
 	err := a.Issuer.DeSerialization(source)
 	if err != nil {
 		return err

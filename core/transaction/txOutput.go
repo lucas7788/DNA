@@ -22,6 +22,12 @@ func (o *TxOutput) Deserialize(r io.Reader) {
 	o.Value.Deserialize(r)
 	o.ProgramHash.Deserialize(r)
 }
+func (o *TxOutput) Serialization(sink *common.ZeroCopySink) error {
+	sink.WriteUint256(o.AssetID)
+	sink.WriteFixed64(o.Value)
+	sink.WriteUint160(o.ProgramHash)
+	return nil
+}
 func (o *TxOutput) Deserialization(source *common.ZeroCopySource) error {
 	val,eof := source.NextBytes(common.UINT256SIZE)
 	if eof {
@@ -31,22 +37,14 @@ func (o *TxOutput) Deserialization(source *common.ZeroCopySource) error {
 	if eof {
 		return io.ErrUnexpectedEOF
 	}
-	data, eof := source.NextInt64()
+	o.Value, eof = source.NextFixed64()
 	if eof {
 		return io.ErrUnexpectedEOF
 	}
-	o.Value = common.Fixed64(data)
-	val,eof = source.NextBytes(common.UINT160SIZE)
+	o.ProgramHash ,eof = source.NextUint160()
 	if eof {
 		return io.ErrUnexpectedEOF
 	}
-	copy(o.ProgramHash[:], val)
 	return nil
 }
 
-func (o *TxOutput) Serialization(sink *common.ZeroCopySink) error {
-	sink.WriteUint256(o.AssetID)
-	sink.WriteFixed64(o.Value)
-	sink.WriteUint160(o.ProgramHash)
-	return nil
-}

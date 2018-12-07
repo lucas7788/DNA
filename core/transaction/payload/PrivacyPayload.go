@@ -8,6 +8,7 @@ import (
 	"crypto/elliptic"
 	"crypto/rand"
 	"errors"
+	"github.com/ontio/ontology/common"
 	"io"
 	mrand "math/rand"
 	"time"
@@ -62,11 +63,49 @@ func (pp *PrivacyPayload) Serialize(w io.Writer, version byte) error {
 }
 
 func (pp *PrivacyPayload) Serialization(sink *ZeroCopySink, version byte) error {
-	sink.WriteBytes([]byte{byte(pp.PayloadType)})
+	sink.WriteByte(byte(pp.PayloadType))
 	sink.WriteVarBytes(pp.Payload)
-	sink.WriteBytes([]byte{byte(pp.EncryptType)})
-	pp.EncryptAttr.Serialization(sink)
+	sink.WriteByte(byte(pp.EncryptType))
+	err := pp.EncryptAttr.Serialization(sink)
+	if err != nil {
+		return err
+	}
 	return nil
+}
+
+func (pp *PrivacyPayload) Deserialization(source *ZeroCopySource, version byte) error {
+	//TODO
+	//payloadType,_,irregular,eof := source.NextVarBytes()
+	//if irregular {
+	//	return common.ErrIrregularData
+	//}
+	payloadType,eof := source.NextByte()
+	if eof {
+		return io.ErrUnexpectedEOF
+	}
+
+	pp.PayloadType = EncryptedPayloadType(payloadType)
+	p, _, irregular,eof := source.NextVarBytes()
+	if irregular {
+		return common.ErrIrregularData
+	}
+	if eof {
+		return io.EOF
+	}
+	pp.Payload = EncryptedPayload(p)
+	t, eof := source.NextByte()
+	if eof {
+		return io.EOF
+	}
+    pp.EncryptType = PayloadEncryptType(t)
+	switch pp.EncryptType {
+	case ECDH_AES256:
+		pp.EncryptAttr = new(EcdhAes256)
+	default:
+		return errors.New("unknown EncryptType")
+	}
+	err := pp.EncryptAttr.Deserialization(source)
+	return err
 }
 
 func (pp *PrivacyPayload) Deserialize(r io.Reader, version byte) error {
@@ -99,11 +138,6 @@ func (pp *PrivacyPayload) Deserialize(r io.Reader, version byte) error {
 	err = pp.EncryptAttr.Deserialize(r)
 
 	return err
-}
-
-func (pp *PrivacyPayload) Deserialization(source *ZeroCopySource, version byte) error {
-	//TODO
-	return nil
 }
 
 type EcdhAes256 struct {
@@ -158,10 +192,12 @@ func (ea *EcdhAes256) Deserialize(r io.Reader) error {
 }
 
 func (ea *EcdhAes256) Deserialization(source *ZeroCopySource) error {
+	ea.FromPubkey = new(crypto.PubKey)
 	err := ea.FromPubkey.DeSerialization(source)
 	if err != nil {
 		return err
 	}
+	ea.ToPubkey = new(crypto.PubKey)
 	err = ea.ToPubkey.DeSerialization(source)
 	if err != nil {
 		return err

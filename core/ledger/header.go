@@ -21,15 +21,17 @@ func (h *Header) Serialization(sink *common.ZeroCopySink) error {
 	if err != nil {
 		return err
 	}
-	sink.WriteByte(byte(0))
+	sink.WriteByte(byte('0'))
 	return nil
 }
 
 func (h *Header) Deserialization(source *common.ZeroCopySource) error {
-	err := h.Blockdata.Deserialization(source)
+	blockData := new(Blockdata)
+	err := blockData.Deserialization(source)
 	if err != nil {
 		return err
 	}
+	h.Blockdata = blockData
 	_, eof := source.NextByte()
     if eof {
     	return io.ErrUnexpectedEOF

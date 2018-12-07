@@ -113,10 +113,11 @@ func (bd *Blockdata) Deserialization(source *ZeroCopySource) error {
 
 func (bd *Blockdata) DeserializationUnsigned(source *ZeroCopySource) error {
 	var eof bool
-	bd.Version, eof = source.NextUint32()
+	temp, eof := source.NextUint32()
 	if eof {
 		return io.ErrUnexpectedEOF
 	}
+	bd.Version = temp
 	bd.PrevBlockHash, eof = source.NextHash()
 	if eof {
 		return io.ErrUnexpectedEOF

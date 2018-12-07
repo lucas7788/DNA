@@ -87,7 +87,7 @@ func (tx *Transaction) Deserialization(source *ZeroCopySource) error {
 	}
 	programHashes := []*program.Program{}
 	if length > 0 {
-		for i:=0; i< int(length); i++ {
+		for i := 0; i < int(length); i++ {
 			outputHashes := new(program.Program)
 			outputHashes.Deserialization(source)
 			programHashes = append(programHashes, outputHashes)
@@ -152,7 +152,7 @@ func (tx *Transaction) DeserializationUnsignedWithoutType(source *ZeroCopySource
 	}
 
 	if length > uint64(0) {
-		for i:=uint64(0);i< length; i++ {
+		for i := uint64(0); i < length; i++ {
 			attr := new(TxAttribute)
 			attr.Deserialization(source)
 			tx.Attributes = append(tx.Attributes, attr)
@@ -161,7 +161,7 @@ func (tx *Transaction) DeserializationUnsignedWithoutType(source *ZeroCopySource
 	//UTXOInputs
 	length, _, irregular, eof = source.NextVarUint()
 	if length > uint64(0) {
-		for i:= uint64(0);i<length;i++ {
+		for i := uint64(0); i < length; i++ {
 			utxo := new(UTXOTxInput)
 			utxo.Deserialization(source)
 			tx.UTXOInputs = append(tx.UTXOInputs, utxo)
@@ -170,7 +170,7 @@ func (tx *Transaction) DeserializationUnsignedWithoutType(source *ZeroCopySource
 	//Outputs
 	length, _, irregular, eof = source.NextVarUint()
 	if length > uint64(0) {
-		for i:= uint64(0);i<length;i++ {
+		for i := uint64(0); i < length; i++ {
 			o := new(TxOutput)
 			o.Deserialization(source)
 			tx.Outputs = append(tx.Outputs, o)
@@ -180,8 +180,8 @@ func (tx *Transaction) DeserializationUnsignedWithoutType(source *ZeroCopySource
 }
 
 func (tx *Transaction) Serialization(sink *ZeroCopySink) error {
-    err := tx.SerializationUnsigned(sink)
-    if err != nil {
+	err := tx.SerializationUnsigned(sink)
+	if err != nil {
 		return NewDetailErr(err, ErrNoCode, "Transaction txSerializeUnsigned Serialize failed.")
 	}
 	//Serialize  Transaction's programs
@@ -223,14 +223,14 @@ func (tx *Transaction) Serialize(w io.Writer) error {
 }
 
 func (tx *Transaction) SerializationUnsigned(sink *ZeroCopySink) error {
-    sink.WriteBytes([]byte{byte(tx.TxType)})
-    sink.WriteBytes([]byte{byte(tx.PayloadVersion)})
+	sink.WriteBytes([]byte{byte(tx.TxType)})
+	sink.WriteBytes([]byte{byte(tx.PayloadVersion)})
 	if tx.Payload == nil {
 		return errors.New("Transaction Payload is nil.")
 	}
 	tx.Payload.Serialization(sink, tx.PayloadVersion)
 	//[]*txAttribute
-    sink.WriteVarUint(uint64((len(tx.Attributes))))
+	sink.WriteVarUint(uint64((len(tx.Attributes))))
 	if len(tx.Attributes) > 0 {
 		for _, attr := range tx.Attributes {
 			attr.Serialization(sink)
