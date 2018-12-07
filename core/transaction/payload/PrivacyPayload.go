@@ -8,7 +8,6 @@ import (
 	"crypto/elliptic"
 	"crypto/rand"
 	"errors"
-	"github.com/ontio/ontology/common"
 	"io"
 	mrand "math/rand"
 	"time"
@@ -87,7 +86,7 @@ func (pp *PrivacyPayload) Deserialization(source *ZeroCopySource, version byte) 
 	pp.PayloadType = EncryptedPayloadType(payloadType)
 	p, _, irregular, eof := source.NextVarBytes()
 	if irregular {
-		return common.ErrIrregularData
+		return ErrIrregularData
 	}
 	if eof {
 		return io.EOF
